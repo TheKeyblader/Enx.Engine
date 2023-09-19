@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<PackageReference Include="Silk.NET.Core" Version="2.17.1-build3804.0" />
+		<PackageReference Include="Silk.NET.Maths" Version="2.17.1-build3804.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Assets\Enx.Engine.Asset\Enx.Engine.Asset.csproj" />
+		<ProjectReference Include="..\..\Enx.Engine\Enx.Engine.csproj" />
+	</ItemGroup>
+</Project>

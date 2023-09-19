@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Profil 1": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Enx.Engine.Sandbox\\Enx.Engine.Sandbox.csproj"
+    }
+  }
+}

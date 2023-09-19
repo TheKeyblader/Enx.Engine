@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Silk.NET.Maths" Version="2.17.1-build3804.0" />
+		<PackageReference Include="Silk.NET.WebGPU.Extensions.WGPU" Version="2.17.1-build3804.0" />
+		<PackageReference Include="Silk.NET.WebGPU.Native.WGPU" Version="2.17.1-build3804.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Enx.WebGPU.SourceGenerator\Enx.WebGPU.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Update="wgpu_native.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+</Project>

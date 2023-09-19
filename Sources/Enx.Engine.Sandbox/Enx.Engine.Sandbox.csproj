@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0-rc.1.23419.4" />
+		<PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.17.1-build3804.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Enx.Engine.WebGPU\Enx.Engine.WebGPU.csproj" />
+		<ProjectReference Include="..\Enx.Engine.Arch\Enx.Engine.Arch.csproj" />
+	</ItemGroup>
+
+
+</Project>

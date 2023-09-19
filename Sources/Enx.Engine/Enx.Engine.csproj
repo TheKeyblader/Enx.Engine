@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0-preview.7.23375.6" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Enx.Engine.Arch\Enx.Engine.Arch.csproj" />
+		<ProjectReference Include="..\Enx.WebGPU\Enx.WebGPU.csproj" />
+	</ItemGroup>
+
+</Project>

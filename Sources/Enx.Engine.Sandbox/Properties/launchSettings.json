@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Enx.Engine.Sandbox": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "RUST_BACKTRACE": "1",
+        "VK_INSTANCE_LAYERS": "VK_LAYER_KHRONOS_validation"
+      },
+      "nativeDebugging": false
+    }
+  }
+}
