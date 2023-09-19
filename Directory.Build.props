@@ -6,7 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="$(SolutionDir)Sources\Enx.Engine.Arch.SourceGenerator\Enx.Engine.Arch.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"
+		<ProjectReference Include="$(SolutionDir)Sources\Core\Enx.Engine.Arch.SourceGenerator\Enx.Engine.Arch.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"
 						  Condition="'$(AssemblyName)' != 'Enx.Engine.Arch.SourceGenerator'"/>
 	</ItemGroup>
 </Project>

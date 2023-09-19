@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+	  <None Remove="Assets\sprite.wgsl" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Assets\sprite.wgsl" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Silk.NET.Windowing.Common" Version="2.17.1-build3804.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Assets\Enx.Engine.ImageLoader\Enx.Engine.ImageLoader.csproj" />
+	  <ProjectReference Include="..\..\Core\Enx.Engine\Enx.Engine.csproj" />
+	  <ProjectReference Include="..\..\Windows\Enx.Engine.Window\Enx.Engine.Window.csproj" />
+	  <ProjectReference Include="..\Enx.WebGPU\Enx.WebGPU.csproj" />
+	</ItemGroup>
+</Project>
