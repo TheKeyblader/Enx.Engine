@@ -86,4 +86,12 @@ public readonly partial struct XBuffer
             Api.BufferUnmap(Handle);
         }
     }
+
+    partial void DisposeInternal()
+    {
+        unsafe
+        {
+            Api.BufferDestroy(Handle);
+        }
+    }
 }

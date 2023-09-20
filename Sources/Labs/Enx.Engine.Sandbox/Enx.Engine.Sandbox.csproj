@@ -14,5 +14,11 @@
 	  <ProjectReference Include="..\..\WebGPU\Enx.Engine.WebGPU\Enx.Engine.WebGPU.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="Image.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 
 </Project>

@@ -9,6 +9,7 @@ using Silk.NET.Maths;
 using Silk.NET.WebGPU;
 using Silk.NET.WebGPU.Extensions.WGPU;
 using Silk.NET.Windowing;
+using System.Diagnostics;
 
 namespace Enx.Engine.WebGPU.Systems;
 
@@ -102,7 +103,9 @@ public partial class WebGpuUpdateSwapchain(World world) : SystemBase<World>(worl
 
         var comp = World.Get<RenderTargetInfo, SwapChainData, SurfaceData>(resizeEvent.View);
 
-        comp.t0.Size = resizeEvent.Size;
+        ref var renderTargetInfo = ref comp.t0;
+        renderTargetInfo.Size = resizeEvent.Size;
+        Debug.WriteLine(resizeEvent.Size);
 
         if (!comp.t1.SwapChain.IsEmpty)
             comp.t1.SwapChain.Dispose();
@@ -115,8 +118,10 @@ public partial class WebGpuUpdateSwapchain(World world) : SystemBase<World>(worl
             Usage = TextureUsage.RenderAttachment,
             PresentMode = PresentMode.Fifo
         };
-        comp.t1.SwapChain = device.CreateSwapChain(comp.t2.Surface, descriptor);
-        comp.t1.Descriptor = descriptor;
+
+        ref var swapChainData = ref comp.t1;
+        swapChainData.SwapChain = device.CreateSwapChain(comp.t2.Surface, descriptor);
+        swapChainData.Descriptor = descriptor;
 
         World.Destroy(entity);
     }
