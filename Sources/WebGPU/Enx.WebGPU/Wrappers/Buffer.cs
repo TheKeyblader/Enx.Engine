@@ -64,7 +64,7 @@ public readonly partial struct XBuffer
         {
             var size = Unsafe.SizeOf<T>();
             if (Usage.HasFlag(BufferUsage.Vertex)) size = UnsafeHelpers.BufferAlign<T>();
-            var data = Api.BufferGetMappedRange(Handle, (uint)offset, (uint)(size * length));
+            var data = Api.BufferGetMappedRange(Handle, (uint)(offset * size), (uint)(size * length));
             var span = new Span<T>(data, length);
             return span;
         }

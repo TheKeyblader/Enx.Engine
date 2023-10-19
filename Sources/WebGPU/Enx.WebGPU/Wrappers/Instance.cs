@@ -1,5 +1,6 @@
 ﻿using Enx.WebGPU.SourceGenerator;
 using Silk.NET.Core.Contexts;
+using Silk.NET.WebGPU.Extensions.WGPU;
 
 namespace Enx.WebGPU;
 
@@ -10,7 +11,11 @@ public readonly partial struct XInstance
     {
         unsafe
         {
-            var handle = Api.CreateInstance(new InstanceDescriptor());
+            var extras = new InstanceExtras(new ChainedStruct(null, (SType)NativeSType.STypeInstanceExtras), InstanceBackend.DX12);
+            var handle = Api.CreateInstance(new InstanceDescriptor()
+            {
+                NextInChain = (ChainedStruct*)&extras
+            });
             return new XInstance(handle);
         }
     }

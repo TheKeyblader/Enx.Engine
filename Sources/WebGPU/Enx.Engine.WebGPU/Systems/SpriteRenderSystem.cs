@@ -15,13 +15,12 @@ using System.Buffers;
 namespace Enx.Engine.WebGPU.Systems;
 
 [UpdateInGroup<RenderSystemGroup>]
-public partial class SpriteRenderSystem : SystemBase
+public partial class SpriteRenderSystem(World world, IAssetManager assetManager) : SystemBase(world)
 {
     private const int MaxBatchSize = 2048;
     private const int MinBatchSize = 128;
 
-
-    private readonly IAssetManager _assetManager;
+    private readonly IAssetManager _assetManager = assetManager;
 
     private XDevice Device;
     private XBuffer IndexBuffer;
@@ -32,19 +31,12 @@ public partial class SpriteRenderSystem : SystemBase
     private XSampler DefaultSampler;
 
     //Instances
-    private List<SpriteInstance> Instances = new();
-    private List<XBuffer> Buffers = new();
-    private Dictionary<HandleId, Handle<GpuImage>> _textureMappings = new();
-    private Dictionary<HandleId, XBindGroup> _bindMappings = new();
+    private readonly List<SpriteInstance> Instances = new(MinBatchSize);
+    private readonly List<XBuffer> Buffers = new(1);
+    private readonly Dictionary<HandleId, Asset.Handle<GpuImage>> _textureMappings = new();
+    private readonly Dictionary<HandleId, XBindGroup> _bindMappings = new();
     private int spriteRendered;
     private int UsedBuffers;
-
-
-
-    public SpriteRenderSystem(World world, IAssetManager assetManager) : base(world)
-    {
-        _assetManager = assetManager;
-    }
 
     public override void Update()
     {
@@ -110,14 +102,7 @@ public partial class SpriteRenderSystem : SystemBase
                 }
             ]
         });
-        DefaultSampler = Device.CreateSampler(new XSamplerDescriptor
-        {
-            Compare = CompareFunction.Undefined,
-            MipmapFilter = MipmapFilterMode.Linear,
-            MagFilter = FilterMode.Linear,
-            MinFilter = FilterMode.Linear,
-            MaxAnisotropy = 1,
-        });
+        DefaultSampler = Device.CreateSampler(XSamplerDescriptor.Linear);
     }
     public void CreateRenderPipeline()
     {
@@ -156,7 +141,7 @@ public partial class SpriteRenderSystem : SystemBase
                 [
                     new XVertexBufferLayout
                     {
-                        ArrayStride = UnsafeHelpers.BufferAlign<Matrix4X4<float>>(),
+                        ArrayStride = UnsafeHelpers.BufferAlign<SpriteVertex>(),
                         StepMode = VertexStepMode.Instance,
                         Attributes =
                         [
@@ -189,6 +174,12 @@ public partial class SpriteRenderSystem : SystemBase
                                 ShaderLocation = 4,
                                 Format = VertexFormat.Float32x4,
                                 Offset = UnsafeHelpers.BufferAlign<Vector4D<float>>() * 4,
+                            },
+                            new XVertexAttribute
+                            {
+                                ShaderLocation = 5,
+                                Format = VertexFormat.Float32x4,
+                                Offset = UnsafeHelpers.BufferAlign<Vector4D<float>>() * 5,
                             },
                         ]
                     }
@@ -257,7 +248,7 @@ public partial class SpriteRenderSystem : SystemBase
         }
         else
         {
-            uv_offset_scale = new(0, 1, 1, -1);
+            uv_offset_scale = new(0, 1, 1, 1);
         }
 
         if (sprite.FlipX)
@@ -275,19 +266,23 @@ public partial class SpriteRenderSystem : SystemBase
             quadSize = sprite.CustomSize.Value;
 
         var matrix = transform.Value;
+        var order = 0f;
         if (Matrix4X4.Decompose(matrix, out var scale, out var rotation, out var translation))
         {
             matrix = Matrix4X4<float>.Identity;
             matrix *= Matrix4X4.CreateScale(scale * new Vector3D<float>(quadSize, 1));
             matrix *= Matrix4X4.CreateFromQuaternion(rotation * Quaternion<float>.Identity);
             matrix *= Matrix4X4.CreateTranslation(translation + new Vector3D<float>(quadSize * (-sprite.Origin - new Vector2D<float>(0.5f)), 0));
+            order = translation.Z;
         }
 
         Instances.Add(new SpriteInstance
         {
             Transform = matrix,
+            TexCoordOffsetScale = uv_offset_scale,
             TextureId = sprite.ImageHandle,
-            Color = sprite.Color.ToLinearVector()
+            Color = sprite.Color.ToLinearVector(),
+            Order = order
         });
     }
 
@@ -300,6 +295,8 @@ public partial class SpriteRenderSystem : SystemBase
     public void RenderSprite()
     {
         if (Instances.Count == 0) return;
+
+        Instances.Sort();
 
         foreach (var _renderPass in World.Query(RenderPassQuery).GetComponentsIterator<XRenderPassEncoder>())
         {
@@ -396,7 +393,6 @@ public partial class SpriteRenderSystem : SystemBase
                 UsedBuffers++;
             }
 
-
             var buffer = Buffers[UsedBuffers - 1];
             using var owner = MemoryPool<SpriteVertex>.Shared.Rent(batchSize);
             for (var i = 0; i < batchSize; i++)
@@ -405,16 +401,17 @@ public partial class SpriteRenderSystem : SystemBase
                 owner.Memory.Span[spriteRendered + i] = new SpriteVertex
                 {
                     Transform = sprite.Transform,
-                    Color = sprite.Color
+                    Color = sprite.Color,
+                    TexCoordOffsetScale = sprite.TexCoordOffsetScale,
                 };
             }
-
-            Device.Queue.WriteBuffer(buffer, spriteRendered, owner.Memory.Span);
             var size = UnsafeHelpers.BufferAlign<SpriteVertex>();
+            Device.Queue.WriteBuffer(buffer, spriteRendered, owner.Memory.Span[..batchSize]);
             renderPass.SetVertexBuffer(0, buffer, size * spriteRendered, size * batchSize);
             renderPass.DrawIndexed(6, batchSize, 0, 0, spriteRendered);
 
             spriteRendered += batchSize;
+            offset += batchSize;
             length -= batchSize;
         }
     }
@@ -431,16 +428,22 @@ public partial class SpriteRenderSystem : SystemBase
 }
 
 
-struct SpriteInstance
+struct SpriteInstance : IComparable<SpriteInstance>
 {
     public HandleId TextureId;
     public Matrix4X4<float> Transform;
     public Vector4D<float> Color;
+    public Vector4D<float> TexCoordOffsetScale;
+    public float Order;
+
+    public readonly int CompareTo(SpriteInstance other)
+        => Order.CompareTo(other.Order);
 }
 
 struct SpriteVertex
 {
     public Matrix4X4<float> Transform;
     public Vector4D<float> Color;
+    public Vector4D<float> TexCoordOffsetScale;
 }
 

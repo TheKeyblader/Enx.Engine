@@ -24,7 +24,7 @@ public readonly partial struct XRenderPassEncoder
     {
         unsafe
         {
-            Api.RenderPassEncoderSetVertexBuffer(Handle, (uint)slot, buffer.Handle, (ulong)offset, (ulong)(size ?? buffer.Size));
+            Api.RenderPassEncoderSetVertexBuffer(Handle, (uint)slot, buffer.Handle, (ulong)offset, (ulong)(size ?? (buffer.Size - offset)));
         }
     }
     public void SetBindGroup(int groupIndex, XBindGroup bindGroup, Span<int> dynamicOffset = default)

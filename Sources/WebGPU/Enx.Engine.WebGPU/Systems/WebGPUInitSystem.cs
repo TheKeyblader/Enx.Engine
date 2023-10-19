@@ -1,6 +1,7 @@
 ﻿using Arch.Core;
 using Enx.Engine.Arch;
 using Enx.Engine.Arch.Groups;
+using Enx.Engine.Arch.Services;
 using Enx.Engine.Graphics.Components;
 using Enx.Engine.WebGPU.Components;
 using Enx.Engine.Window;
@@ -31,15 +32,17 @@ public static class WebGPUSystem
         var adapter = instance.RequestAdapter(new XRequestAdapterOptions
         {
             CompatibleSurface = surface,
+            BackendType = BackendType.D3D12
         });
         var prefferedFormat = surface.GetPreferredFormat(adapter);
 
-        var device = adapter.RequestDevice(new XDeviceDescriptor { });
+        var device = adapter.RequestDevice(new XDeviceDescriptor());
         device.UncapturedError = (status, message) =>
         {
             Console.WriteLine($"Device Error: {status}-{message}");
         };
         var queue = device.Queue;
+        queue.WorkSubmitted = (status) => Console.WriteLine("Queue finish with status " + status);
 
         world.Create(instance, adapter, device, queue, new PreferredFormat(prefferedFormat));
 
@@ -60,7 +63,7 @@ public static class WebGPUSystem
             Height = source.FramebufferSize.Y,
             Width = source.FramebufferSize.X,
             Usage = TextureUsage.RenderAttachment,
-            PresentMode = PresentMode.Fifo
+            PresentMode = PresentMode.Immediate
         };
 
         var swapChainData = new SwapChainData
@@ -78,34 +81,40 @@ public static class WebGPUSystem
             _windows[world] = [];
         _windows[world][source] = world.Reference(windowEntity);
     }
-    public static void Resize(Vector2D<int> size, World world, IView view)
+    public static void Resize(Vector2D<int> size, IEventManager<FramebufferResizeEvent> events, World world, IView view)
     {
         if (size.X == 0 || size.Y == 0) return;
 
-        world.Create(new FramebufferResizeEvent { Size = size, View = _windows[world][view] });
+        events.Send(new FramebufferResizeEvent { Size = size, View = _windows[world][view] });
     }
     public static EntityReference GetEntityReference(World world, IView view)
         => _windows[world][view];
 }
 
 [UpdateInGroup<PreUpdateSystemGroup>]
-public partial class WebGpuUpdateSwapchain(World world) : SystemBase<World>(world)
+public partial class WebGpuUpdateSwapchain(World world, IEventManager<FramebufferResizeEvent> events) : SystemBase<World>(world)
 {
+    private readonly IEventManager<FramebufferResizeEvent> _events = events;
+
     public override void Update()
     {
-        HandleResizeQuery(World);
+        HandleResize();
     }
 
-    [Query]
-    internal void HandleResize(in Entity entity, in FramebufferResizeEvent resizeEvent)
+    internal void HandleResize()
     {
         var device = World.QueryUnique<XDevice>();
 
-        var comp = World.Get<RenderTargetInfo, SwapChainData, SurfaceData>(resizeEvent.View);
+        FramebufferResizeEvent? resizeEvent = default;
+        foreach (var @event in _events)
+            resizeEvent = @event;
 
+        if (!resizeEvent.HasValue) return;
+
+        var comp = World.Get<RenderTargetInfo, SwapChainData, SurfaceData>(resizeEvent.Value.View);
         ref var renderTargetInfo = ref comp.t0;
-        renderTargetInfo.Size = resizeEvent.Size;
-        Debug.WriteLine(resizeEvent.Size);
+        renderTargetInfo.Size = resizeEvent.Value.Size;
+        Debug.WriteLine(resizeEvent.Value.Size);
 
         if (!comp.t1.SwapChain.IsEmpty)
             comp.t1.SwapChain.Dispose();
@@ -113,16 +122,14 @@ public partial class WebGpuUpdateSwapchain(World world) : SystemBase<World>(worl
         var descriptor = new XSwapChainDescriptor
         {
             Format = comp.t2.PreferredFormat,
-            Height = resizeEvent.Size.Y,
-            Width = resizeEvent.Size.X,
+            Height = resizeEvent.Value.Size.Y,
+            Width = resizeEvent.Value.Size.X,
             Usage = TextureUsage.RenderAttachment,
-            PresentMode = PresentMode.Fifo
+            PresentMode = PresentMode.Immediate
         };
 
         ref var swapChainData = ref comp.t1;
         swapChainData.SwapChain = device.CreateSwapChain(comp.t2.Surface, descriptor);
         swapChainData.Descriptor = descriptor;
-
-        World.Destroy(entity);
     }
 }

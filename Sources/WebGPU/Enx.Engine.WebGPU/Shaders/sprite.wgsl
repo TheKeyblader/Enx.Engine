@@ -11,7 +11,8 @@ struct VertexInput {
     @location(1) model_col1: vec4<f32>,
     @location(2) model_col2: vec4<f32>,
     @location(3) model_col3: vec4<f32>,
-    @location(4) color: vec4<f32>
+    @location(4) color: vec4<f32>,
+    @location(5) uv_offset_scale: vec4<f32>
 }
 
 struct VertexOutput {
@@ -41,7 +42,7 @@ fn vs_main(in: VertexInput) -> VertexOutput {
         in.model_col2,
         in.model_col3
     ) * vec4<f32>(vertex_position, 1.0);
-    out.uv = vec2<f32>(vertex_position.xy);
+    out.uv = vec2<f32>(vertex_position.xy) * in.uv_offset_scale.zw + in.uv_offset_scale.xy;
     out.color = in.color;
     return out;
 }

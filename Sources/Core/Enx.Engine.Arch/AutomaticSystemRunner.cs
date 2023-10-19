@@ -1,5 +1,6 @@
 ﻿using Enx.Engine.Arch.Groups;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System.Reflection;
 
 namespace Enx.Engine.Arch;
@@ -16,14 +17,11 @@ public class AutomaticSystemRunner : ISystem
         typeof(RootSystemGroup)
     ];
 
-    public AutomaticSystemRunner(IServiceProvider serviceProvider, params Assembly[] assemblies)
+    public AutomaticSystemRunner(IServiceProvider serviceProvider, IOptions<SystemRunnerConfiguration> options)
     {
-        var asm = new List<Assembly>(assemblies)
-        {
-            typeof(AutomaticSystemRunner).Assembly
-        };
+        options.Value.Assemblies.Add(typeof(AutomaticSystemRunner).Assembly);
 
-        var systems = GetSystems(asm.Distinct().ToList(), typeof(UpdateSystemGroup));
+        var systems = GetSystems(options.Value.Assemblies.Distinct().ToList(), options.Value.DefaultSystemGroup ?? typeof(UpdateSystemGroup));
         _rootSystem = (RootSystemGroup)CreateSystem(typeof(RootSystemGroup), serviceProvider, systems);
     }
 

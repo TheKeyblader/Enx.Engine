@@ -6,6 +6,17 @@ namespace Enx.WebGPU;
 [Wrapper(typeof(Queue))]
 public readonly partial struct XQueue
 {
+    public Action<QueueWorkDoneStatus> WorkSubmitted
+    {
+        set
+        {
+            unsafe
+            {
+                Api.QueueOnSubmittedWorkDone(Handle, PfnQueueWorkDoneCallback.From((QueueWorkDoneStatus arg0, void* arg1) => value(arg0)), null);
+            }
+        }
+    }
+
     public void Submit(XCommandBuffer commandBuffer)
     {
         Span<XCommandBuffer> buffers = [commandBuffer];
