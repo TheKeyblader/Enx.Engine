@@ -61,7 +61,7 @@ public readonly partial struct XAdapter
                 fixed (FeatureName* ptr = descriptor.RequiredFeatures)
                 {
                     deviceDescriptor.RequiredFeatures = ptr;
-                    deviceDescriptor.RequiredFeaturesCount = (uint)descriptor.RequiredFeatures.Length;
+                    deviceDescriptor.RequiredFeatureCount = (uint)descriptor.RequiredFeatures.Length;
                 }
             }
 
